@@ -8,7 +8,7 @@ Planet assets.
 2. the ```X-User: admin``` header is **required** for creating a new asset (you cannot "authentication" by omitting the header) <sup>(not that there actually *is* any authentication)</sup>
 3. All endpoints require/emit json. The asset creation endpoint will attempt to coerce post data to json, so you do not need to set its mimetype to ```application/json```.
 
-## Installation and use
+## Installation
 
 From within a (virtual)env of your choosing:
 
@@ -22,10 +22,48 @@ If you want to run the test suite, you will need to ```pip install .[test]```.
 Actually, depending on your version of pip, you may need to instead run
 ```pip install -e .[test]```.
 
+## Use
+
 To run, from same (virtual)env invoke:
 
 ```
     python -m plassets [--host -H host] [--port -p port]
+```
+
+The easiest way to add assets is using the built-in, extremely, absurdly,
+ridiculously, laughably simple html page served from the base route. Assuming
+you are running on the default localhost:8080, simply start the app and use
+a browser to navigate to ```127.0.0.1:8080/``` and you'll see a page that lets
+you add assets. The page does an ajax request, automatically adding the X-User
+header for you.
+
+Otherwise, you will need to ```POST``` json to the ```/assets/v1/``` endpoint
+like this:
+
+```json
+{
+    "name": "fooz",
+    "type": "satellite",
+    "class": "dove",
+    "details": {}
+}
+```
+
+This is the only endpoint that mutates state. **For all requests,** a status
+code of 200 indicates success, and an HTTP error code indicates failure.
+
+Every other endpoint is fairly self-explanatory, and returns json:
+
+```
+    GET     /assets/v1/                     List all assets.
+    POST    /assets/v1/                     Create a new asset.
+    GET     /assets/v1/<name>               Get a single asset, by its name
+    GET     /assets/v1/sat/                 Get only satellites
+    GET     /assets/v1/sat/dove             Get only Dove satellites
+    GET     /assets/v1/sat/rapideye         Get only RapidEye satellites
+    GET     /assets/v1/ant/                 Get only antennae
+    GET     /assets/v1/ant/dish/            Get only dish antennae
+    GET     /assets/v1/ant/yagi/            Get only yagi antennae
 ```
 
 # Implementation & design notes
@@ -70,8 +108,3 @@ since asset names must be at least 4 characters.
 
 + This is tested against py3k5 and py2k7
 + Within docs, there's a jawas_plassets file, that is part of an API experiment for an as-yet-unreleased microservice framework (think: flask competitor for py3.5 native async/await)
-
-# Scratchpad:
-
-    >>> from plassets.plassets import db
-    >>> db.create_all()
