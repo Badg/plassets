@@ -34,6 +34,7 @@ Plassets: Planet Labs asset store coding exercise
 import logging
 import functools
 import json
+import re
 
 from flask import Flask
 from flask import request
@@ -127,7 +128,8 @@ class Asset(db.Model):
     enforce immutable name/type/class while we're at it.
     '''
     __tablename__ = 'assets'
-    _name = db.Column('name', db.String(64), primary_key=True, nullable=False)
+    _name = db.Column('name', db.String(64), primary_key=True, nullable=False,
+                      unique=True, index=True, default='asset')
     # These are probably bigger than they need to be, but unless we're planning
     # on having hundreds of millions of assets... might as well have headroom
     _asset_type = db.Column('type', db.String(128), nullable=False)
