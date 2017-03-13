@@ -55,6 +55,7 @@ code of 200 indicates success, and an HTTP error code indicates failure.
 Every other endpoint is fairly self-explanatory, and returns json:
 
 ```
+    GET     /                               Silly HTML frontend to add assets.
     GET     /assets/v1/                     List all assets.
     POST    /assets/v1/                     Create a new asset.
     GET     /assets/v1/<name>               Get a single asset, by its name
