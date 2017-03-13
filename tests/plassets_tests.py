@@ -45,70 +45,73 @@ from plassets import Asset
 # ###############################################
 
 
-dove1 = (
-    Asset('dove1', 'satellite', 'dove'),
-    {
-        'name': 'dove1',
-        'type': 'satellite',
-        'class': 'dove'
-    }
-)
-dove2 = (
-    Asset('dove2', 'satellite', 'dove'),
-    {
-        'name': 'dove2',
-        'type': 'satellite',
-        'class': 'dove'
-    }
-)
-rapideye1 = (
-    Asset('rapideye1', 'satellite', 'rapideye'),
-    {
-        'name': 'rapideye1',
-        'type': 'satellite',
-        'class': 'rapideye'
-    }
-)
-rapideye2 = (
-    Asset('rapideye2', 'satellite', 'rapideye'),
-    {
-        'name': 'rapideye2',
-        'type': 'satellite',
-        'class': 'rapideye'
-    }
-)
-dish1 = (
-    Asset('dish1', 'antenna', 'dish'),
-    {
-        'name': 'dish1',
-        'type': 'antenna',
-        'class': 'dish'
-    }
-)
-dish2 = (
-    Asset('dish2', 'antenna', 'dish'),
-    {
-        'name': 'dish2',
-        'type': 'antenna',
-        'class': 'dish'
-    }
-)
-yagi1 = (
-    Asset('yagi1', 'antenna', 'yagi'),
-    {
-        'name': 'yagi1',
-        'type': 'antenna',
-        'class': 'yagi'
-    }
-)
-yagi2 = (
-    Asset('yagi2', 'antenna', 'yagi'),
-    {
-        'name': 'yagi2',
-        'type': 'antenna',
-        'class': 'yagi'
-    }
-)
+def make_vectors():
+    dove1 = (
+        Asset('dove1', 'satellite', 'dove'),
+        {
+            'name': 'dove1',
+            'type': 'satellite',
+            'class': 'dove'
+        }
+    )
+    dove2 = (
+        Asset('dove2', 'satellite', 'dove'),
+        {
+            'name': 'dove2',
+            'type': 'satellite',
+            'class': 'dove'
+        }
+    )
+    rapideye1 = (
+        Asset('rapideye1', 'satellite', 'rapideye'),
+        {
+            'name': 'rapideye1',
+            'type': 'satellite',
+            'class': 'rapideye'
+        }
+    )
+    rapideye2 = (
+        Asset('rapideye2', 'satellite', 'rapideye'),
+        {
+            'name': 'rapideye2',
+            'type': 'satellite',
+            'class': 'rapideye'
+        }
+    )
+    dish1 = (
+        Asset('dish1', 'antenna', 'dish'),
+        {
+            'name': 'dish1',
+            'type': 'antenna',
+            'class': 'dish'
+        }
+    )
+    dish2 = (
+        Asset('dish2', 'antenna', 'dish'),
+        {
+            'name': 'dish2',
+            'type': 'antenna',
+            'class': 'dish'
+        }
+    )
+    yagi1 = (
+        Asset('yagi1', 'antenna', 'yagi'),
+        {
+            'name': 'yagi1',
+            'type': 'antenna',
+            'class': 'yagi'
+        }
+    )
+    yagi2 = (
+        Asset('yagi2', 'antenna', 'yagi'),
+        {
+            'name': 'yagi2',
+            'type': 'antenna',
+            'class': 'yagi'
+        }
+    )
+    
+    return dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2
 
 
 # ###############################################
@@ -224,7 +227,7 @@ class AssetTester(flask_testing.TestCase):
         
         with self.assertRaises(ValueError):
             Asset('foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo' +
-                  'foofoofoofoofoofoofoofoofoofoo', 'satellite', 'dove')
+                  'foofoofoofo', 'satellite', 'dove')
     
     def test_bad_types(self):
         ''' Test some invalid types
@@ -251,8 +254,24 @@ class AssetTester(flask_testing.TestCase):
         plassets.db.session.add(asset)
         plassets.db.session.commit()
         
+        # Also make sure mutation fails
         with self.assertRaises(AttributeError):
+            asset.name = 'name2'
+        
+        with self.assertRaises(ValueError):
             asset = Asset('name', 'satellite', 'dove')
+            
+    def test_retrieve(self):
+        ''' Test that retrieving objects works correctly (makes sure
+        we didn't fiddle too much with sqlalchemy's innards).
+        '''
+        asset = Asset('name', 'satellite', 'dove')
+        plassets.db.session.add(asset)
+        plassets.db.session.commit()
+        
+        asset2 = Asset.query.get('name')
+        self.assertEqual(asset.name, asset2.name)
+        self.assertEqual(asset.asset_class, asset2.asset_class)
     
     def test_dove(self):
         ''' Test valid and invalid doves

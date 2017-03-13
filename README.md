@@ -51,6 +51,10 @@ class within the asset store. Were that the case, I would approach the overall
 architecture with dedicated models for each asset type and class (I would still
 use a flat store for the assets themselves though).
 
+The simulated nosql design architecture also has the effect that the asset name
+is used directly as the primary key, instead of assigning each a unique ID
+programmatically and giving the name an index.
+
 # Side notes
 
 + This is tested against py3k5 and py2k7
