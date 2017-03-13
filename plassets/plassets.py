@@ -130,6 +130,79 @@ def asset_detail(asset_type, asset_class, name, cls):
         self._details = json.dumps(details)
         
     return detail
+    
+
+# Lulz writing HTML+JS within .py, silly rabbit, trix are for kids
+WHATSITS = '''
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Absurdly simple asset creation page</title>
+    <script
+        src="https://code.jquery.com/jquery-3.1.1.min.js"
+        integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+        crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            var doSubmit = function() {
+                var assetName = $('#name').val();
+                var assetType = $('#type').val();
+                var assetClass = $('#cls').val();
+                // HAHAHAHA great idea boo
+                // var assetStrDeets = $('#details').val();
+                
+                // if (assetStrDeets==='') {
+                //     var assetDeets = {}
+                // }
+                // else {
+                //     var assetDeets = eval(assetStrDeets);
+                // }
+                
+                $.ajax({
+                    url         : '/assets/v1/',
+                    type        : 'POST',
+                    headers     : { 'X-User': 'admin' },
+                    dataType    : 'json',
+                    contentType : 'application/json;',
+                    data        : JSON.stringify({
+                        'name'    : assetName,
+                        'type'    : assetType,
+                        'class'   : assetClass,
+                        // 'details' : assetDeets
+                        'details': {}
+                    }),
+                    statusCode: {
+                        200: function() {
+                            alert('Success!')
+                        },
+                        400: function() {
+                            alert('Failure!')
+                        },
+                        401: function() {
+                            alert('Unauthenticated... you modified the page?')
+                        }
+                    }
+                });
+            };
+            $('#submit').click(doSubmit);
+        });
+    </script>
+  </head>
+  <body>
+    <input type="text" placeholder="Asset name" id="name">
+    <input type="text" placeholder="Asset type" id="type">
+    <input type="text" placeholder="Asset class" id="cls">
+    <!-- <textarea placeholder="Asset details.
+        DANGER: THIS WILL RUN eval() ON WHATEVER YOU PUT IN THE BOX!"
+        id="details" style="display:block; width: 500px; height: 500px;">
+    </textarea> -->
+    <button type="button" id="submit"
+        style="display:block; width: 200px; height: 2em;">
+        Create asset</button>
+  </body>
+</html>
+'''
 
 
 # ###############################################
@@ -274,6 +347,11 @@ class Asset(db.Model):
             'class': self.asset_class,
             'details': details
         }
+        
+        
+@app.route('/')
+def show_silly_make():
+    return WHATSITS
 
 
 @app.route('/assets/v1/', methods=['POST'])
