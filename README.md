@@ -2,6 +2,12 @@
 
 Planet assets.
 
+## Important notes
+
+1. this will create a tempfile sqlite database, which will be cleared after every run (there is no persistence between runs; you'll need to manually invoke ```create_app``` with a different sqlite location if you'd like persistence; see ```__main__.py```)
+2. the ```X-User: admin``` header is **required** for creating a new asset (you cannot "authentication" by omitting the header) <sup>(not that there actually *is* any authentication)</sup>
+3. All endpoints require/emit json. The asset creation endpoint will attempt to coerce post data to json, so you do not need to set its mimetype to ```application/json```.
+
 ## Installation and use
 
 From within a (virtual)env of your choosing:
@@ -13,6 +19,8 @@ From within a (virtual)env of your choosing:
 ```
 
 If you want to run the test suite, you will need to ```pip install .[test]```.
+Actually, depending on your version of pip, you may need to instead run
+```pip install -e .[test]```.
 
 To run, from same (virtual)env invoke:
 
@@ -54,6 +62,9 @@ use a flat store for the assets themselves though).
 The simulated nosql design architecture also has the effect that the asset name
 is used directly as the primary key, instead of assigning each a unique ID
 programmatically and giving the name an index.
+
+Finally: note that the filter strategy cannot conflict with the asset name,
+since asset names must be at least 4 characters.
 
 # Side notes
 

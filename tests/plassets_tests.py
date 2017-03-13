@@ -35,6 +35,7 @@ import unittest
 import flask_testing
 import tempfile
 import os
+import json
 import plassets
 
 from plassets import Asset
@@ -150,40 +151,226 @@ class AppTester(flask_testing.TestCase):
         )
         
     def test_new_asset(self):
+        ''' Create a new asset. Required to have the x-user header set
+        to admin.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        
+        # Make sure all kinds of assets post successfully
+        res = self.client.post('/assets/v1/', data=json.dumps(dove1[1]),
+                               headers={'X-User': 'admin'})
+        self.assertEqual(200, res.status_code)
+        self.assertIsNotNone(Asset.query.get(dove1[1]['name']))
+        
+        res = self.client.post('/assets/v1/', data=json.dumps(dove2[1]),
+                               headers={'X-User': 'admin'})
+        self.assertEqual(200, res.status_code)
+        self.assertIsNotNone(Asset.query.get(dove2[1]['name']))
+        
+        res = self.client.post('/assets/v1/', data=json.dumps(rapideye1[1]),
+                               headers={'X-User': 'admin'})
+        self.assertEqual(200, res.status_code)
+        self.assertIsNotNone(Asset.query.get(rapideye1[1]['name']))
+        
+        res = self.client.post('/assets/v1/', data=json.dumps(rapideye2[1]),
+                               headers={'X-User': 'admin'})
+        self.assertEqual(200, res.status_code)
+        self.assertIsNotNone(Asset.query.get(rapideye2[1]['name']))
+        
+        res = self.client.post('/assets/v1/', data=json.dumps(dish1[1]),
+                               headers={'X-User': 'admin'})
+        self.assertEqual(200, res.status_code)
+        self.assertIsNotNone(Asset.query.get(dish1[1]['name']))
+        
+        res = self.client.post('/assets/v1/', data=json.dumps(dish2[1]),
+                               headers={'X-User': 'admin'})
+        self.assertEqual(200, res.status_code)
+        self.assertIsNotNone(Asset.query.get(dish2[1]['name']))
+        
+        res = self.client.post('/assets/v1/', data=json.dumps(yagi1[1]),
+                               headers={'X-User': 'admin'})
+        self.assertEqual(200, res.status_code)
+        self.assertIsNotNone(Asset.query.get(yagi1[1]['name']))
+        
+        # And, of course, check "authentication"
+        res = self.client.post('/assets/v1/', data=json.dumps(yagi2[1]))
+        self.assertEqual(401, res.status_code)
+        self.assertIsNone(Asset.query.get(yagi2[1]['name']))
         
     def test_get_single(self):
+        ''' Test retrieving a single asset.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.commit()
+        
+        # Make sure we get a real response from existant assets.
+        res = self.client.get('/assets/v1/' + dove1[1]['name'])
+        self.assertEqual(res.json, dove1[1])
+        res = self.client.get('/assets/v1/' + rapideye1[1]['name'])
+        self.assertEqual(res.json, rapideye1[1])
+        res = self.client.get('/assets/v1/' + dish1[1]['name'])
+        self.assertEqual(res.json, dish1[1])
+        res = self.client.get('/assets/v1/' + yagi1[1]['name'])
+        self.assertEqual(res.json, yagi1[1])
+        
+        # And make sure we get 404s on other assets.
+        res = self.client.get('/assets/v1/' + dove2[1]['name'])
+        self.assertEqual(res.response_code, 404)
+        res = self.client.get('/assets/v1/' + rapideye2[1]['name'])
+        self.assertEqual(res.response_code, 404)
+        res = self.client.get('/assets/v1/' + dish2[1]['name'])
+        self.assertEqual(res.response_code, 404)
+        res = self.client.get('/assets/v1/' + yagi2[1]['name'])
+        self.assertEqual(res.response_code, 404)
         
     def test_get_all(self):
+        ''' Test retrieving all assets.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.commit()
+        
+        res = self.client.get('/assets/v1/')
+        # Do the comparison as a set, because we're lazy, and we don't care
+        # about order for this exercise
+        self.assertEqual(set(res.json),
+                         {dove1[1], rapideye1[1], dish1[1], yagi1[1]})
         
     def test_filter_sat(self):
+        ''' Test retrieving only satellites.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(dove2[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(rapideye2[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(dish2[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.add(yagi2[0])
+        plassets.db.session.commit()
+        
+        res = self.client.get('/assets/v1/sat')
+        # Do the comparison as a set, because we're lazy, and we don't care
+        # about order for this exercise
+        self.assertEqual(set(res.json),
+                         {dove1[1], dove2[1], rapideye1[1], rapideye2[1]})
         
     def test_filter_dove(self):
+        ''' Test retrieving only dove satellites.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(dove2[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(rapideye2[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(dish2[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.add(yagi2[0])
+        plassets.db.session.commit()
+        
+        res = self.client.get('/assets/v1/sat/dove')
+        # Do the comparison as a set, because we're lazy, and we don't care
+        # about order for this exercise
+        self.assertEqual(set(res.json),
+                         {dove1[1], dove2[1]})
         
     def test_filter_rapideye(self):
+        ''' Test retrieving only rapideye satellites.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(dove2[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(rapideye2[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(dish2[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.add(yagi2[0])
+        plassets.db.session.commit()
+        
+        res = self.client.get('/assets/v1/sat/rapideye')
+        # Do the comparison as a set, because we're lazy, and we don't care
+        # about order for this exercise
+        self.assertEqual(set(res.json),
+                         {rapideye1[1], rapideye2[1]})
         
     def test_filter_ants(self):
+        ''' Test retrieving only antennae.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(dove2[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(rapideye2[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(dish2[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.add(yagi2[0])
+        plassets.db.session.commit()
+        
+        res = self.client.get('/assets/v1/ant')
+        # Do the comparison as a set, because we're lazy, and we don't care
+        # about order for this exercise
+        self.assertEqual(set(res.json),
+                         {dish1[1], dish2[1], yagi1[1], yagi2[1]})
         
     def test_filter_dish(self):
+        ''' Test retrieving only dish antennae.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(dove2[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(rapideye2[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(dish2[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.add(yagi2[0])
+        plassets.db.session.commit()
+        
+        res = self.client.get('/assets/v1/ant/dish')
+        # Do the comparison as a set, because we're lazy, and we don't care
+        # about order for this exercise
+        self.assertEqual(set(res.json),
+                         {dish1[1], dish2[1]})
         
     def test_filter_yagi(self):
+        ''' Test retrieving only yagi antennae.
         '''
-        '''
+        vecs = make_vectors()
+        dove1, dove2, rapideye1, rapideye2, dish1, dish2, yagi1, yagi2 = vecs
+        plassets.db.session.add(dove1[0])
+        plassets.db.session.add(dove2[0])
+        plassets.db.session.add(rapideye1[0])
+        plassets.db.session.add(rapideye2[0])
+        plassets.db.session.add(dish1[0])
+        plassets.db.session.add(dish2[0])
+        plassets.db.session.add(yagi1[0])
+        plassets.db.session.add(yagi2[0])
+        plassets.db.session.commit()
+        
+        res = self.client.get('/assets/v1/ant/yagi')
+        # Do the comparison as a set, because we're lazy, and we don't care
+        # about order for this exercise
+        self.assertEqual(set(res.json),
+                         {yagi1[1], yagi2[1]})
         
         
 class AssetTester(flask_testing.TestCase):
