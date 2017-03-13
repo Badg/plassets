@@ -38,6 +38,9 @@ import re
 
 from flask import Flask
 from flask import request
+from flask import abort
+from flask import jsonify
+from flask import Response
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -60,12 +63,20 @@ db = SQLAlchemy()
 
 # Decorators
 def admin_required(func):
+    ''' Require X-User: admin header.
     '''
-    '''
-    
     @functools.wraps(func)
-    def wrapper():
-        pass
+    def wrapper(*args, **kwargs):
+        try:
+            if request.headers['X-User'] != 'admin':
+                # Awkward way of converging the "header is missing" with the
+                # "username is incorrect" cases
+                raise KeyError()
+                
+        except KeyError:
+            abort(401)
+        
+        return func(*args, **kwargs)
         
     return wrapper
     
@@ -242,57 +253,132 @@ class Asset(db.Model):
     gain = asset_detail('antenna', 'yagi', 'gain', float)
     diameter = asset_detail('antenna', 'dish', 'diameter', float)
     radome = asset_detail('antenna', 'dish', 'radome', bool)
+    
+    # As a utility function...
+    def dictify(self):
+        ''' Convert self to json-parseable dict. Could also define a
+        custom json serializer for flask, but this is faster.
+        '''
+        # If this were larger, it might make sense to do this programmatically,
+        # but it doesn't make sense with only 4 columns, especially with the
+        # name remapping.
+        if self._details:
+            # Lulz this is awkward...
+            details = json.loads(self._details)
+        else:
+            details = {}
+        
+        return {
+            'name': self.name,
+            'type': self.asset_type,
+            'class': self.asset_class,
+            'details': details
+        }
 
 
 @app.route('/assets/v1/', methods=['POST'])
+@admin_required
 def make_new_asset():
+    ''' Make a new asset, per a json request.
     '''
-    '''
+    data = request.get_json(force=True)
+    
+    # **details is quick+snazzy and I like it. Though, in reality, it's unsafe,
+    # because a malicious user could pass in, for example, '__dict__': 'foo'
+    # in the JSON. But, for MVP with authenticated users, this should be good
+    # enough (json is safe, so worst-case, it would crash the server)
+    try:
+        name = data.pop('name')
+        asset_type = data.pop('type')
+        asset_class = data.pop('class')
+        details = data.pop('details')
+        asset = Asset(name, asset_type, asset_class, **details)
+    
+    except (KeyError, AttributeError, ValueError, TypeError):
+        abort(400)
+    
+    db.session.add(asset)
+    db.session.commit()
+    return Response(status=200)
 
 
 @app.route('/assets/v1/', methods=['GET'])
 def show_all_assets():
+    ''' Get all existing assets.
+    This is terribly, terribly inefficient for large databases of
+    assets; it should really, really be paginated for that.
     '''
-    '''
+    q = Asset.query.order_by(Asset.name)
+    return jsonify([asset.dictify() for asset in q.all()])
 
 
 @app.route('/assets/v1/<name>', methods=['GET'])
 def show_single_asset(name):
+    ''' Get a single existing asset, by name.
     '''
-    '''
+    asset = Asset.query.get(name)
+    
+    if asset is None:
+        abort(404)
+    else:
+        return jsonify(asset.dictify())
     
     
 @app.route('/assets/v1/sat')
 def filter_sats():
+    ''' Get all existing satellites.
     '''
-    '''
+    q = Asset.query.filter_by(_asset_type='satellite').order_by(Asset.name)
+    return jsonify([asset.dictify() for asset in q.all()])
     
     
 @app.route('/assets/v1/sat/dove')
 def filter_dove():
+    ''' Get all existing Dove satellites.
+    
+    If we ever started to have name collisions in classes, this would
+    need a smarter query.
     '''
-    '''
+    q = Asset.query.filter_by(_asset_class='dove').order_by(Asset.name)
+    return jsonify([asset.dictify() for asset in q.all()])
     
     
 @app.route('/assets/v1/sat/rapideye')
 def filter_rapideye():
+    ''' Get all existing RapidEye satellites.
+    
+    If we ever started to have name collisions in classes, this would
+    need a smarter query.
     '''
-    '''
+    q = Asset.query.filter_by(_asset_class='rapideye').order_by(Asset.name)
+    return jsonify([asset.dictify() for asset in q.all()])
     
     
 @app.route('/assets/v1/ant/')
 def filter_ants():
+    ''' Get all existing antennae.
     '''
-    '''
+    q = Asset.query.filter_by(_asset_type='antenna').order_by(Asset.name)
+    return jsonify([asset.dictify() for asset in q.all()])
     
     
 @app.route('/assets/v1/ant/dish')
 def filter_dish():
+    ''' Get all existing dish antennae.
+    
+    If we ever started to have name collisions in classes, this would
+    need a smarter query.
     '''
-    '''
+    q = Asset.query.filter_by(_asset_class='dish').order_by(Asset.name)
+    return jsonify([asset.dictify() for asset in q.all()])
     
     
 @app.route('/assets/v1/ant/yagi')
 def filter_yagi():
+    ''' Get all existing yagi antennae.
+    
+    If we ever started to have name collisions in classes, this would
+    need a smarter query.
     '''
-    '''
+    q = Asset.query.filter_by(_asset_class='yagi').order_by(Asset.name)
+    return jsonify([asset.dictify() for asset in q.all()])

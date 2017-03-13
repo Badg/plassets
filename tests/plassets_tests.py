@@ -50,65 +50,73 @@ def make_vectors():
     dove1 = (
         Asset('dove1', 'satellite', 'dove'),
         {
-            'name': 'dove1',
-            'type': 'satellite',
-            'class': 'dove'
+            u'name': u'dove1',
+            u'type': u'satellite',
+            u'class': u'dove',
+            u'details': {}
         }
     )
     dove2 = (
         Asset('dove2', 'satellite', 'dove'),
         {
-            'name': 'dove2',
-            'type': 'satellite',
-            'class': 'dove'
+            u'name': u'dove2',
+            u'type': u'satellite',
+            u'class': u'dove',
+            u'details': {}
         }
     )
     rapideye1 = (
         Asset('rapideye1', 'satellite', 'rapideye'),
         {
-            'name': 'rapideye1',
-            'type': 'satellite',
-            'class': 'rapideye'
+            u'name': u'rapideye1',
+            u'type': u'satellite',
+            u'class': u'rapideye',
+            u'details': {}
         }
     )
     rapideye2 = (
         Asset('rapideye2', 'satellite', 'rapideye'),
         {
-            'name': 'rapideye2',
-            'type': 'satellite',
-            'class': 'rapideye'
+            u'name': u'rapideye2',
+            u'type': u'satellite',
+            u'class': u'rapideye',
+            u'details': {}
         }
     )
     dish1 = (
         Asset('dish1', 'antenna', 'dish'),
         {
-            'name': 'dish1',
-            'type': 'antenna',
-            'class': 'dish'
+            u'name': u'dish1',
+            u'type': u'antenna',
+            u'class': u'dish',
+            u'details': {}
         }
     )
     dish2 = (
         Asset('dish2', 'antenna', 'dish'),
         {
-            'name': 'dish2',
-            'type': 'antenna',
-            'class': 'dish'
+            u'name': u'dish2',
+            u'type': u'antenna',
+            u'class': u'dish',
+            u'details': {}
         }
     )
     yagi1 = (
         Asset('yagi1', 'antenna', 'yagi'),
         {
-            'name': 'yagi1',
-            'type': 'antenna',
-            'class': 'yagi'
+            u'name': u'yagi1',
+            u'type': u'antenna',
+            u'class': u'yagi',
+            u'details': {}
         }
     )
     yagi2 = (
         Asset('yagi2', 'antenna', 'yagi'),
         {
-            'name': 'yagi2',
-            'type': 'antenna',
-            'class': 'yagi'
+            u'name': u'yagi2',
+            u'type': u'antenna',
+            u'class': u'yagi',
+            u'details': {}
         }
     )
     
@@ -221,13 +229,13 @@ class AppTester(flask_testing.TestCase):
         
         # And make sure we get 404s on other assets.
         res = self.client.get('/assets/v1/' + dove2[1]['name'])
-        self.assertEqual(res.response_code, 404)
+        self.assertEqual(res.status_code, 404)
         res = self.client.get('/assets/v1/' + rapideye2[1]['name'])
-        self.assertEqual(res.response_code, 404)
+        self.assertEqual(res.status_code, 404)
         res = self.client.get('/assets/v1/' + dish2[1]['name'])
-        self.assertEqual(res.response_code, 404)
+        self.assertEqual(res.status_code, 404)
         res = self.client.get('/assets/v1/' + yagi2[1]['name'])
-        self.assertEqual(res.response_code, 404)
+        self.assertEqual(res.status_code, 404)
         
     def test_get_all(self):
         ''' Test retrieving all assets.
@@ -241,10 +249,8 @@ class AppTester(flask_testing.TestCase):
         plassets.db.session.commit()
         
         res = self.client.get('/assets/v1/')
-        # Do the comparison as a set, because we're lazy, and we don't care
-        # about order for this exercise
-        self.assertEqual(set(res.json),
-                         {dove1[1], rapideye1[1], dish1[1], yagi1[1]})
+        self.assertEqual(res.json,
+                         [dish1[1], dove1[1], rapideye1[1], yagi1[1]])
         
     def test_filter_sat(self):
         ''' Test retrieving only satellites.
@@ -262,10 +268,8 @@ class AppTester(flask_testing.TestCase):
         plassets.db.session.commit()
         
         res = self.client.get('/assets/v1/sat')
-        # Do the comparison as a set, because we're lazy, and we don't care
-        # about order for this exercise
-        self.assertEqual(set(res.json),
-                         {dove1[1], dove2[1], rapideye1[1], rapideye2[1]})
+        self.assertEqual(res.json,
+                         [dove1[1], dove2[1], rapideye1[1], rapideye2[1]])
         
     def test_filter_dove(self):
         ''' Test retrieving only dove satellites.
@@ -283,10 +287,8 @@ class AppTester(flask_testing.TestCase):
         plassets.db.session.commit()
         
         res = self.client.get('/assets/v1/sat/dove')
-        # Do the comparison as a set, because we're lazy, and we don't care
-        # about order for this exercise
-        self.assertEqual(set(res.json),
-                         {dove1[1], dove2[1]})
+        self.assertEqual(res.json,
+                         [dove1[1], dove2[1]])
         
     def test_filter_rapideye(self):
         ''' Test retrieving only rapideye satellites.
@@ -304,10 +306,8 @@ class AppTester(flask_testing.TestCase):
         plassets.db.session.commit()
         
         res = self.client.get('/assets/v1/sat/rapideye')
-        # Do the comparison as a set, because we're lazy, and we don't care
-        # about order for this exercise
-        self.assertEqual(set(res.json),
-                         {rapideye1[1], rapideye2[1]})
+        self.assertEqual(res.json,
+                         [rapideye1[1], rapideye2[1]])
         
     def test_filter_ants(self):
         ''' Test retrieving only antennae.
@@ -324,11 +324,9 @@ class AppTester(flask_testing.TestCase):
         plassets.db.session.add(yagi2[0])
         plassets.db.session.commit()
         
-        res = self.client.get('/assets/v1/ant')
-        # Do the comparison as a set, because we're lazy, and we don't care
-        # about order for this exercise
-        self.assertEqual(set(res.json),
-                         {dish1[1], dish2[1], yagi1[1], yagi2[1]})
+        res = self.client.get('/assets/v1/ant/')
+        self.assertEqual(res.json,
+                         [dish1[1], dish2[1], yagi1[1], yagi2[1]])
         
     def test_filter_dish(self):
         ''' Test retrieving only dish antennae.
@@ -346,10 +344,8 @@ class AppTester(flask_testing.TestCase):
         plassets.db.session.commit()
         
         res = self.client.get('/assets/v1/ant/dish')
-        # Do the comparison as a set, because we're lazy, and we don't care
-        # about order for this exercise
-        self.assertEqual(set(res.json),
-                         {dish1[1], dish2[1]})
+        self.assertEqual(res.json,
+                         [dish1[1], dish2[1]])
         
     def test_filter_yagi(self):
         ''' Test retrieving only yagi antennae.
@@ -367,10 +363,8 @@ class AppTester(flask_testing.TestCase):
         plassets.db.session.commit()
         
         res = self.client.get('/assets/v1/ant/yagi')
-        # Do the comparison as a set, because we're lazy, and we don't care
-        # about order for this exercise
-        self.assertEqual(set(res.json),
-                         {yagi1[1], yagi2[1]})
+        self.assertEqual(res.json,
+                         [yagi1[1], yagi2[1]])
         
         
 class AssetTester(flask_testing.TestCase):

@@ -36,6 +36,7 @@ import tempfile
 import argparse
 
 from . import create_app
+from . import db
 
 
 root_parser = argparse.ArgumentParser()
@@ -65,6 +66,7 @@ if __name__ == '__main__':
             SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path,
             SQLALCHEMY_TRACK_MODIFICATIONS = False
         )
+        db.create_all()
         app.run(host=args.host, port=args.port)
         
     finally:
